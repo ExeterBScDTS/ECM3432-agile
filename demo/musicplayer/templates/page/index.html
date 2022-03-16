@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<figure>
+  <figcaption>Listen</figcaption>
+  <audio
+      id="audioPlayer"
+      controls
+      src="">
+          Your browser does not support the
+          <code>audio</code> element.
+  </audio>
+</figure>
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-start">
+  <div class="col">
+      <h2>Albums</h2>
+      <div class="list-group" id="albumList">
+        {% for album in albums %}
+          <a href="?a={{ album.id }}" class="list-group-item list-group-item-action" data-id="{{ album.id }}">{{ album.title }}</a>
+        {% endfor %}
+        </div>
+  </div>
+  <div class="col">
+    <h2>Tracks</h2>
+    <div class="list-group" id="trackList">
+      <!--
+      <a href="#" class="list-group-item list-group-item-action">track</a>
+      -->
+    </div>
+  </div>
+  <div class="col">
+    <h2>Playlist</h2>
+    <div class="list-group" id="playList">
+      <!--
+      <a href="#" class="list-group-item list-group-item-action">song</a>
+      -->
+    </div>
+  </div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+  
+  const playlist = new Array();
+
+  function buildTrackList(album, tracks){
+    let items = "\n";
+    tracks.forEach(function (track){
+      items += '<a href="#' + track +
+      '" class="list-group-item list-group-item-action" data-album="' + album + '"">' + 
+        track + '</a>\n';
+    })
+    $('#trackList').html(items);
+    // Action for track selection
+    $('#trackList a').on('click', function (e) {
+      e.preventDefault();
+      let track = this.innerText;
+      let album = this.dataset.album;
+      playlist.push(album+track);
+      console.debug("playlist = ", playlist);
+      buildPlayList();
+    });
+  }
+
+  function buildPlayList(){
+    let items = "";
+    playlist.forEach(function (song){
+      console.debug("song = ", song);
+      items += '<a href="#'+song+'" class="list-group-item list-group-item-action">' + song + '</a>';
+    })
+    $('#playList').html(items);
+    // Action for song selection
+    $('#playList a').on('click', function (e) {
+      //e.preventDefault();
+      let song = this.innerText;
+      console.debug("playing: ", song);
+      $('#audioPlayer').attr("src", "/music/" + song);
+      document.getElementById('audioPlayer').play();
+    });
+  }
+
+  // Action for album selection
+  $('#albumList a').on('click', function (e) {
+    e.preventDefault();
+    let a = this.dataset.id;
+    fetch("/tracks/"+a).then(response => response.json())
+    .then(data => {
+      console.debug('tracklist', data);
+      buildTrackList(a, data);
+    });
+  });
+  
+</script>
+{% endblock %}
+
